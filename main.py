@@ -93,7 +93,7 @@ def write(file_path, content):
     # check if the folder exists
     dir_path = os.path.split(file_path)[0]
     if not os.path.exists(dir_path):
-        # create folder
+        # create folder, mkdir 只能创建一层目录, makedirs 可以创建多层级目录
         os.makedirs(dir_path)
         logging.info('>>> dir [{}] doesn\'t exist, now create it'.format(dir_path))
 
@@ -103,14 +103,14 @@ def write(file_path, content):
         logging.info('>>> generate file [{}]'.format(file_path))
 
 
-def dos2unix(input: str) -> str:
+def dos2unix(dos_content: str) -> str:
     """
     convert dos content to unix content
 
-    :param input: dos content
+    :param dos_content: dos content
     :return: unix content
     """
-    return input.replace('\r\n', '\n')
+    return dos_content.replace('\r\n', '\n')
 
 
 def clean_out(out_dir='out'):
@@ -129,15 +129,27 @@ def clean_out(out_dir='out'):
 
 
 def generate_po(columns: list) -> None:
+    """
+    generate po
+
+    :param columns: database columns,
+        like this: [('id', 'integer', None, True), ('name', 'text', 'product name', True), ...]
+    :return: None
+    """
+
     # 类全名, 用于生成 import
-    full_type_names = set()  # 空set 只能使用 set(), {} 是用来创建空 dict 的
-    # column-type dict, 用于生成 field, 不能用 type 作为 key, 因为有重复
+    # 空set 只能使用 set(), {} 是用来创建空 dict 的
+    full_type_names = set()
+
+    # column-type dict, 用于生成 field, 不能用 type 作为 key, 因为可能存在相同类型的 db column 可能类型相同
     col_type_dict = {}
+
     for col in columns:
+        # 只有 BigDecimal, Date 需要显式引入, 其他基本类型都默认导入了
         col_type = col[1]
         if 'numeric' in col_type:
             full_type_names.add('java.math.BigDecimal')
-        if 'timestamp' in col_type:
+        elif 'timestamp' in col_type:
             full_type_names.add('java.util.Date')
 
         #################
@@ -146,43 +158,48 @@ def generate_po(columns: list) -> None:
         col_name = strutils.camel_format(col_name)
         if 'bigint' in col_type:
             col_type_dict[col_name] = 'Long'
-        if 'text' in col_type or 'character' in col_type:
+        elif 'integer' in col_type:
+            col_type_dict[col_name] = 'Integer'
+        elif 'text' in col_type or 'character' in col_type:
             col_type_dict[col_name] = 'String'
-        if 'jsonb' in col_type:
+        elif 'jsonb' in col_type:
             col_type_dict[col_name] = 'Object'
-        if 'smallint' in col_type:
+        elif 'smallint' in col_type:
             col_type_dict[col_name] = 'Short'
-        if 'timestamp' in col_type:
+        elif 'timestamp' in col_type:
             col_type_dict[col_name] = 'Date'
-        if 'numeric' in col_type:
+        elif 'numeric' in col_type:
             col_type_dict[col_name] = 'BigDecimal'
+        else:
+            logging.error('>>> unknown column type [{}]'.format(col_type))
 
-    path = os.path.abspath('..') + '\\src\\main\\java\\com\\pingan\\imp\\sme\\pojo\\po\\' + global_config.get(
-        'domain') + '.java'
+    path = os.path.join(os.path.abspath('out'),
+                        global_config.get('base_package').replace('.', '/'),
+                        # 不要用 '/' 开头
+                        'pojo/po', global_config.get('domain') + '.java')
 
-    write(path, render('entity.tpl', base_package=global_config.get('base_package'),
-                       full_type_names=full_type_names,
-                       domain=global_config.get('domain'),
-                       col_type_dict=col_type_dict))
+    rendered = render('po.tpl', base_package=global_config.get('base_package'), full_type_names=full_type_names,
+                      domain=global_config.get('domain'), col_type_dict=col_type_dict)
+    write(path, rendered)
 
 
-def generate_mapper():
-    path = os.path.abspath('..') + '\\src\\main\\java\\com\\pingan\\imp\\sme\\dao\\mapper\\' + global_config.get(
-        'domain') + 'Mapper.java'
+def generate_mapper() -> None:
+    path = os.path.join(os.path.abspath('out'),
+                        global_config.get('base_package').replace('.', '/'),
+                        'dao/mapper', global_config.get('domain') + 'Mapper.java')
     write(path, render('mapper.tpl', base_package=global_config.get('base_package'),
                        domain=global_config.get('domain'), ))
 
 
 def generate_dao():
-    path = os.path.abspath('..') + '\\src\\main\\java\\com\\pingan\\imp\\sme\\dao\\' + global_config.get(
-        'domain') + 'Dao.java'
+    path = os.path.join('out', global_config.get('base_package').replace('.', '/'),
+                        'dao', global_config.get('domain') + 'Dao.java')
     write(path, render('dao.tpl', base_package=global_config.get('base_package'),
                        domain=global_config.get('domain')))
 
 
 def generate_mapper_xml(columns: list):
-    path = os.path.abspath('..') + '\\src\\main\\resources\\mapper\\' + \
-           global_config.get('domain') + 'Mapper.xml'
+    path = os.path.join('out', 'mapper', global_config.get('domain') + 'Mapper.xml')
     result_map = list()
     result_map_jsonb = list()  # jsonb 单独拿出来, 在模板中处理 typeHandler
     base_column_list = ''
@@ -218,6 +235,7 @@ def generate_mapper_xml(columns: list):
                         result_map_jsonb=result_map_jsonb,
                         base_column_list=base_column_list[:-1],
                         table_name=global_config.get('table_name'))
+    # TODO
     # jinja2 doesn't support #{{{...}}},
     pattern = re.compile(r'(\[)(.*?)(\])')
     sub = pattern.sub(r'{\2}', render_str, )
@@ -225,16 +243,16 @@ def generate_mapper_xml(columns: list):
 
 
 def generate_service():
-    path = os.path.abspath('..') + '\\src\\main\\java\\com\\pingan\\imp\\sme\\service\\impl\\' + global_config.get(
-        'domain') + 'ServiceImpl.java'
+    path = os.path.join('out', global_config.get('base_package').replace('.', '/'),
+                        'service/impl', global_config.get('domain') + 'ServiceImpl.java')
     write(path, render('service.tpl',
                        base_package=global_config.get('base_package'),
                        domain=global_config.get('domain')))
 
 
 def generate_controller():
-    path = os.path.abspath('..') + '\\src\\main\\java\\com\\pingan\\imp\\sme\\controller\\' + global_config.get(
-        'domain') + 'Controller.java'
+    path = os.path.join('out', global_config.get('base_package').replace('.', '/'),
+                        'controller', global_config.get('domain') + 'Controller.java')
     write(path, render('controller.tpl',
                        base_package=global_config.get('base_package'),
                        domain=global_config.get('domain')))

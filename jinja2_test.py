@@ -13,10 +13,10 @@ if __name__ == '__main__':
     import os
 
     # 不适用于 命令行程序,
-    print(sys.argv)  # ['D:/repo/repo_github/shared_already/rest-api-generator/test_jinja.py']
+    print(sys.argv)  # ['D:/repo/repo_github/shared_already/rest-api-generator/jinja2_test.py']
     # 获得的是当前执行脚本的位置
     # 若在命令行, 打印的是 'py xxx'命令中的 xxx
-    print(sys.argv[0])  # D:/repo/repo_github/shared_already/rest-api-generator/test_jinja.py
+    print(sys.argv[0])  # D:/repo/repo_github/shared_already/rest-api-generator/jinja2_test.py
 
     # python 查找库的路径, 第一个是当前项目路径
     print(sys.path)
