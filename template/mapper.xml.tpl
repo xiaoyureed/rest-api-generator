@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="{{base_package}}.dao.mapper.{{domain}}Mapper">
-    <resultMap id="BaseResultMap" type="{{base_package}}.pojo.po.{{domain}}">
+<mapper namespace="{{base_package}}.dao.mapper.{{domain | capitalize}}Mapper">
+    <resultMap id="BaseResultMap" type="{{base_package}}.pojo.po.{{domain | capitalize}}">
         {% for item in result_map %}<result column="{{item.column}}" jdbcType="{{item.jdbc_type}}" property="{{item.property}}"/>
         {% endfor %}
         {% for item in result_map_jsonb %}<result column="{{item.column}}" jdbcType="{{item.jdbc_type}}" property="{{item.property}}"
@@ -24,7 +24,7 @@
         where id = #{id,jdbcType=BIGINT}
     </delete>
 
-    <insert id="insertSelective" parameterType="{{base_package}}.pojo.po.{{domain}}" keyProperty="id" useGeneratedKeys="true">
+    <insert id="insertSelective" parameterType="{{base_package}}.pojo.po.{{domain | capitalize}}" keyProperty="id" useGeneratedKeys="true">
         insert into {{table_name}}
         <trim prefix="(" suffix=")" suffixOverrides=",">
             {% for item in result_map %}<if test="{{item.property}} != null">
@@ -48,7 +48,7 @@
         </trim>
     </insert>
 
-    <update id="updateByPrimaryKeySelective" parameterType="{{base_package}}.pojo.po.{{domain}}">
+    <update id="updateByPrimaryKeySelective" parameterType="{{base_package}}.pojo.po.{{domain | capitalize}}">
         update {{table_name}}
         <set>
             {% for item in result_map %}<if test="{{item.property}} != null">

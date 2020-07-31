@@ -1,20 +1,20 @@
 package {{base_package}}.dao;
 
-import {{base_package}}.dao.mapper.{{domain}}Mapper;
-import {{base_package}}.pojo.po.{{domain}};
+import {{base_package}}.dao.mapper.{{domain | capitalize}}Mapper;
+import {{base_package}}.pojo.po.{{domain | capitalize}};
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class {{domain}}Dao {
+public class {{domain | capitalize}}Dao {
     @Autowired
-    private {{domain}}Mapper {{domain}}Mapper;
+    private {{domain | capitalize}}Mapper {{domain}}Mapper;
 
-    public {{domain}} selectByPrimaryKey(Long id) {
+    public {{domain | capitalize}} selectByPrimaryKey(Long id) {
         return {{domain}}Mapper.selectByPrimaryKey(id);
     }
 
-    public int insertSelective({{domain}} record) {
+    public int insertSelective({{domain | capitalize}} record) {
         return {{domain}}Mapper.insertSelective(record);
     }
 
@@ -22,7 +22,7 @@ public class {{domain}}Dao {
         return {{domain}}Mapper.deleteByPrimaryKey(id);
     }
 
-    public int updateByPrimaryKeySelective({{domain}} record) {
+    public int updateByPrimaryKeySelective({{domain | capitalize}} record) {
         return {{domain}}Mapper.updateByPrimaryKeySelective(record);
     }
 

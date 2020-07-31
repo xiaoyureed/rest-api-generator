@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 global_config = {
     # package name
     'base_package': 'io.github.xiaoyureed.demo',
-    'domain': 'Product',
+    'domain': 'product',
     'table_name': 'product',
     # db connection info
     'host': 'localhost',
@@ -159,7 +159,7 @@ def generate_po(columns: list) -> None:
         if 'bigint' in col_type:
             col_type_dict[col_name] = 'Long'
         elif 'integer' in col_type:
-            col_type_dict[col_name] = 'Integer'
+            col_type_dict[col_name] = 'Long'  # 数据库 中的 integer 类型也使用  java 的 Long 类型
         elif 'text' in col_type or 'character' in col_type:
             col_type_dict[col_name] = 'String'
         elif 'jsonb' in col_type:
@@ -176,7 +176,7 @@ def generate_po(columns: list) -> None:
     path = os.path.join(os.path.abspath('out'),
                         global_config.get('base_package').replace('.', '/'),
                         # 不要用 '/' 开头
-                        'pojo/po', global_config.get('domain') + '.java')
+                        'pojo/po', global_config.get('domain').capitalize() + '.java')
 
     rendered = render('po.tpl', base_package=global_config.get('base_package'), full_type_names=full_type_names,
                       domain=global_config.get('domain'), col_type_dict=col_type_dict)
@@ -186,20 +186,20 @@ def generate_po(columns: list) -> None:
 def generate_mapper() -> None:
     path = os.path.join(os.path.abspath('out'),
                         global_config.get('base_package').replace('.', '/'),
-                        'dao/mapper', global_config.get('domain') + 'Mapper.java')
+                        'dao/mapper', global_config.get('domain').capitalize() + 'Mapper.java')
     write(path, render('mapper.tpl', base_package=global_config.get('base_package'),
                        domain=global_config.get('domain'), ))
 
 
 def generate_dao():
     path = os.path.join('out', global_config.get('base_package').replace('.', '/'),
-                        'dao', global_config.get('domain') + 'Dao.java')
+                        'dao', global_config.get('domain').capitalize() + 'Dao.java')
     write(path, render('dao.tpl', base_package=global_config.get('base_package'),
                        domain=global_config.get('domain')))
 
 
 def generate_mapper_xml(columns: list):
-    path = os.path.join('out', 'mapper', global_config.get('domain') + 'Mapper.xml')
+    path = os.path.join('out', 'mapper', global_config.get('domain').capitalize() + 'Mapper.xml')
     result_map = list()
     result_map_jsonb = list()  # jsonb 单独拿出来, 在模板中处理 typeHandler
     base_column_list = ''
@@ -244,7 +244,7 @@ def generate_mapper_xml(columns: list):
 
 def generate_service():
     path = os.path.join('out', global_config.get('base_package').replace('.', '/'),
-                        'service/impl', global_config.get('domain') + 'ServiceImpl.java')
+                        'service/impl', global_config.get('domain').capitalize() + 'ServiceImpl.java')
     write(path, render('service.tpl',
                        base_package=global_config.get('base_package'),
                        domain=global_config.get('domain')))
@@ -252,13 +252,13 @@ def generate_service():
 
 def generate_controller():
     path = os.path.join('out', global_config.get('base_package').replace('.', '/'),
-                        'controller', global_config.get('domain') + 'Controller.java')
+                        'controller', global_config.get('domain').capitalize() + 'Controller.java')
     write(path, render('controller.tpl',
                        base_package=global_config.get('base_package'),
                        domain=global_config.get('domain')))
 
 
-if __name__ == '__main__':
+def generate_all():
     cols = query_columns()
     generate_po(cols)
     generate_mapper()
@@ -266,6 +266,10 @@ if __name__ == '__main__':
     generate_mapper_xml(cols)
     generate_service()
     generate_controller()
+
+
+if __name__ == '__main__':
+    generate_all()
 
 # def postgres_demo():
 #     import psycopg2 as pg

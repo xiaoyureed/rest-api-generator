@@ -1,15 +1,15 @@
 package {{base_package}}.dao.mapper;
 
-import {{base_package}}.pojo.po.{{domain}};
+import {{base_package}}.pojo.po.{{domain | capitalize}};
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
-public interface {{domain}}Mapper {
-    int insertSelective({{domain}} record);
+public interface {{domain | capitalize}}Mapper {
+    int insertSelective({{domain | capitalize}} record);
 
     int deleteByPrimaryKey(Long id);
 
-    int updateByPrimaryKeySelective({{domain}} record);
+    int updateByPrimaryKeySelective({{domain | capitalize}} record);
 
-    {{domain}} selectByPrimaryKey(Long id);
+    {{domain | capitalize}} selectByPrimaryKey(Long id);
 }

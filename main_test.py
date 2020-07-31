@@ -55,3 +55,6 @@ class TestMain(unittest.TestCase):
 
     def test_generate_controller(self):
         main.generate_controller()
+
+    def test_generate_all(self):
+        main.generate_all()
